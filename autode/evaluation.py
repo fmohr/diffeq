@@ -4,6 +4,8 @@ from scipy.integrate import odeint
 from inspect import signature
 import matplotlib.pyplot as plt
 
+import logging
+
 class ODEEvaluator:
     
     # stores the data in the object
@@ -16,6 +18,7 @@ class ODEEvaluator:
             raise ValueError("List of timestamps and list of values should have same length!")
         self.times = times
         self.observations = observations
+        self.logger = logging.getLogger('odeevaluator')
         
     # evaluates a concrete model
     def evaluate(self, model):
@@ -98,10 +101,10 @@ class ODEINTEvaluator(ODEEvaluator):
                 break
             lower = -self.base**exp
             upper = self.base**exp
-            #print(f"Setting exponent to {exp}")
+            self.logger.info(f"Setting exponent to {exp}")
             for i in range(attempts_per_exponent):
                 
-                #print(f"Trying {i}-th optimization for exp {exp}")
+                self.logger.info(f"Trying {i}-th optimization for exp {exp}")
                 
                 # stop condition
                 if best_score < self.threshold:
@@ -117,12 +120,13 @@ class ODEINTEvaluator(ODEEvaluator):
                 # fit model and find predicted values
                 try:
                     result = minimize(residual, params_to_tune, method='leastsq',max_nfev = 10**2)
+                    self.logger.info(f"Observed result {result}")
 
                     # update the best fitted solution if this one is the best
                     if result.chisqr < best_score:
                         best_score = result.chisqr
                         best_model = result.params
-                        print(f"Found new best model with score {best_score}")
+                        self.logger.info(f"Found new best model with score {best_score}")
                 
                 except KeyboardInterrupt: # forward interrupts
                     raise
